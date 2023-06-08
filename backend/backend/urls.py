@@ -5,5 +5,5 @@ from rest_framework_simplejwt import views as jwt_views
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('', include('volunteers.urls')),
-    path('', include ('accounts.urls')),
+    path('api/', include ('accounts.urls')),
 ]

@@ -1,72 +1,81 @@
-from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.views import APIView
-from .serializers import SendPasswordResetEmailSerializer, UserChangePasswordSerializer, UserLoginSerializer, UserPasswordResetSerializer, UserProfileSerializer, UserRegistrationSerializer
-from django.contrib.auth import authenticate
-from .renderers import UserRenderer
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import IsAuthenticated
+from .serializers import UserSerializer
+from .models import User
+from django.contrib.auth.hashers import check_password
+from django.contrib.auth import logout
 
-# Generate Token Manually
-def get_tokens_for_user(user):
-  refresh = RefreshToken.for_user(user)
-  return {
-      'refresh': str(refresh),
-      'access': str(refresh.access_token),
-  }
+class SignUpView(APIView):
+    permission_classes = (AllowAny,)
 
-class UserRegistrationView(APIView):
-  renderer_classes = [UserRenderer]
-  def post(self, request, format=None):
-    serializer = UserRegistrationSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    user = serializer.save()
-    token = get_tokens_for_user(user)
-    return Response({'token':token, 'msg':'Registration Successful'}, status=status.HTTP_201_CREATED)
+    def get(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
 
-class UserLoginView(APIView):
-  renderer_classes = [UserRenderer]
-  def post(self, request, format=None):
-    serializer = UserLoginSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    email = serializer.data.get('email')
-    password = serializer.data.get('password')
-    user = authenticate(email=email, password=password)
-    if user is not None:
-      token = get_tokens_for_user(user)
-      return Response({'token':token, 'msg':'Login Success'}, status=status.HTTP_200_OK)
-    else:
-      return Response({'errors':{'non_field_errors':['Email or Password is not Valid']}}, status=status.HTTP_404_NOT_FOUND)
-    
-  def get(self, request, format=None):
-    serializer = UserLoginSerializer(request.user)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    def post(self, request):
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            password = serializer.validated_data['password']
+            user_type = serializer.validated_data['user_type']  # Get user_type from serializer data
 
-class UserProfileView(APIView):
-  renderer_classes = [UserRenderer]
-  permission_classes = [IsAuthenticated]
-  def get(self, request, format=None):
-    serializer = UserProfileSerializer(request.user)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+            if User.objects.filter(email=email).exists():
+                return Response({'error': 'Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
-class UserChangePasswordView(APIView):
-  renderer_classes = [UserRenderer]
-  permission_classes = [IsAuthenticated]
-  def post(self, request, format=None):
-    serializer = UserChangePasswordSerializer(data=request.data, context={'user':request.user})
-    serializer.is_valid(raise_exception=True)
-    return Response({'msg':'Password Changed Successfully'}, status=status.HTTP_200_OK)
+            serializer.save(password=password, user_type=user_type)  # Pass password and user_type explicitly
+            user = User.objects.get(email=email)
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'email': user.email,
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class SendPasswordResetEmailView(APIView):
-  renderer_classes = [UserRenderer]
-  def post(self, request, format=None):
-    serializer = SendPasswordResetEmailSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    return Response({'msg':'Password Reset link send. Please check your Email'}, status=status.HTTP_200_OK)
 
-class UserPasswordResetView(APIView):
-  renderer_classes = [UserRenderer]
-  def post(self, request, uid, token, format=None):
-    serializer = UserPasswordResetSerializer(data=request.data, context={'uid':uid, 'token':token})
-    serializer.is_valid(raise_exception=True)
-    return Response({'msg':'Password Reset Successfully'}, status=status.HTTP_200_OK)
+class LoginView(APIView):
+    permission_classes = (AllowAny,)
+
+    def get(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+        user = User.objects.filter(email=email).first()
+
+        if user and check_password(password, user.password):
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'email': user.email,  # Add the user's email to the response
+            })
+
+        return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class LogoutView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        logout(request)
+        return Response(status=status.HTTP_200_OK)
+
+
+class ManageView(APIView):
+    permission_classes = (IsAdminUser,)
+
+    def get(self, request):
+        # Only admins can access this view
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
+
+

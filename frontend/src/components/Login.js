@@ -1,54 +1,127 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { Container, Form, Button, Alert } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Login = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleEmailChange = (event) => {
-    setEmail(event.target.value);
-  };
+  const handleLogin = (e) => {
+    e.preventDefault();
 
-  const handlePasswordChange = (event) => {
-    setPassword(event.target.value);
-  };
+    const data = {
+      email: email,
+      password: password,
+    };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    axios.post('http://127.0.0.1:8000/login/', { email, password })
+    fetch('http://127.0.0.1:8000/api/login/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
       .then((response) => {
-        localStorage.setItem('token', response.data.token);
-        window.location.href = '/';
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Invalid credentials');
+        }
+      })
+      .then((data) => {
+        // Handle successful login
+        console.log(data);
+        // Show success toast notification
+        toast.success('Login successful');
+        // Redirect to home page
+        navigate('/');
       })
       .catch((error) => {
-        console.log(error.response.data);
-        setErrorMessage(error.response.data.message);
+        // Handle login error
+        console.log(error);
+        // Show error toast notification
+        toast.error('Login failed');
       });
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100">
-      <Container className="p-5 rounded shadow" style={{ maxWidth: '500px' , zIndex:1, position:"relative"}}>
-        <h1 className="mb-4">Login</h1>
-        {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
-        <Form onSubmit={handleSubmit}>
-          <Form.Group controlId="formBasicEmail">
-            <Form.Label>Email address</Form.Label>
-            <Form.Control type="email" placeholder="Enter email" value={email} onChange={handleEmailChange} required />
-          </Form.Group>
-          <Form.Group controlId="formBasicPassword">
-            <Form.Label>Password</Form.Label>
-            <Form.Control type="password" placeholder="Password" value={password} onChange={handlePasswordChange} required />
-          </Form.Group>
-          <Button variant="primary" type="submit">
-            Login
-          </Button>
-        </Form>
-      </Container>
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <h1 className="text-center mb-4">Login</h1>
+        <form onSubmit={handleLogin} style={styles.form}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={styles.input}
+          />
+          <br />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={styles.input}
+          />
+          <br />
+          <button type="submit" style={styles.button}>
+            Log In
+          </button>
+        </form>
+      </div>
+      <ToastContainer />
     </div>
   );
+};
+
+const styles = {
+  container: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    background:
+      'linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url("background-image.jpg")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    zIndex: '1',
+  },
+  card: {
+    padding: '20px',
+    borderRadius: '4px',
+    boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+    background: 'rgba(255, 255, 255, 0.5)',
+    backdropFilter: 'blur(10px)',
+    opacity: '0.9',
+    zIndex: '1',
+    maxWidth: '400px',
+    width: '100%',
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginTop: '20px',
+  },
+  input: {
+    padding: '10px',
+    marginBottom: '10px',
+    width: '100%',
+  },
+  button: {
+    padding: '10px 20px',
+    backgroundColor: '#212529',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    width: '100%',
+  },
 };
 
 export default Login;

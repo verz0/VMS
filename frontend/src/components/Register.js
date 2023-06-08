@@ -1,65 +1,150 @@
 import React, { useState } from 'react';
-import './RegistrationForm.css';
 
-function RegistrationForm() {
+const Signup = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
-  const [password2, setPassword2] = useState('');
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [userType, setUserType] = useState('normal');
 
-  const handleSubmit = (e) => {
+  const handleSignup = (e) => {
     e.preventDefault();
-    const data = { email, first_name: name, password, password2 };
-    fetch('http://127.0.0.1:8000/register/', {
+
+    const data = {
+      email: email,
+      name: name,
+      password: password,
+      user_type: userType,
+    };
+
+    fetch('http://127.0.0.1:8000/api/signup/', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     })
-      .then(response => response.json())
-      .then(data => {
+      .then((response) => response.json())
+      .then((data) => {
         console.log(data);
-        setRegistrationSuccess(true);
       })
-      .catch(error => {
-        console.error(error);
-        // handle error response
+      .catch((error) => {
+        console.log(error);
       });
   };
 
   return (
-    <div className="registration-form-container" style={{zIndex:1}}>
-      
-      <form className="registration-form" onSubmit={handleSubmit} style={{zIndex:1}}>
-        <h2>Registration Form</h2>
-        <label>
-          Email:
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        </label>
-        <br />
-        <label>
-          Name:
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} required />
-        </label>
-        <br />
-        <label>
-          Password:
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        </label>
-        <br />
-        <label>
-          Confirm Password:
-          <input type="password" value={password2} onChange={(e) => setPassword2(e.target.value)} required />
-        </label>
-        <br />
-        <button className="register-button" type="submit">Register</button>
-      </form>
-      {registrationSuccess && <p className="registration-success">Registration successful!</p>}
-
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <h1 className="text-center mb-4">Sign Up</h1>
+        <form onSubmit={handleSignup} style={styles.form}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={styles.input}
+          />
+          <br />
+          <input
+            type="text"
+            placeholder="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            style={styles.input}
+          />
+          <br />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={styles.input}
+          />
+          <br />
+          <div style={styles.fieldGroup}>
+            <label htmlFor="userType" style={styles.label}>
+            </label>
+            <select
+              id="userType"
+              value={userType}
+              onChange={(e) => setUserType(e.target.value)}
+              style={styles.select}
+            >
+              <option value="normal">Normal User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <br />
+          <button type="submit" style={styles.button}>
+            Sign Up
+          </button>
+        </form>
+      </div>
     </div>
   );
-}
+};
 
-export default RegistrationForm;
+const styles = {
+  container: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    background:
+      'linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url("background-image.jpg")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    zIndex: '1',
+  },
+  card: {
+    padding: '20px',
+    borderRadius: '4px',
+    boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
+    background: 'rgba(255, 255, 255, 0.5)',
+    backdropFilter: 'blur(10px)',
+    opacity: '0.9', 
+    zIndex: '1',
+    maxWidth: '400px',
+    width: '100%',
+  },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginTop: '20px',
+    zIndex: '1',
+  },
+  input: {
+    padding: '10px',
+    marginBottom: '10px',
+    width: '300px',
+    zIndex: '1',
+  },
+  fieldGroup: {
+    display: 'flex',
+    alignItems: 'center',
+    zIndex: '1',
+  },
+  label: {
+    marginRight: '10px',
+  },
+  select: {
+    padding: '10px',
+    width: '300px',
+    zIndex: '1',
+  },
+  button: {
+    padding: '10px 20px',
+    backgroundColor: '#212529',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    zIndex: '1',
+  },
+};
+
+export default Signup;

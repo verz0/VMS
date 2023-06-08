@@ -25,7 +25,7 @@ const Students = () => {
         Volunteer List
       </h1>
     <p id="before-table"></p>
-        <Table striped bordered hover className="react-bootstrap-table" id="dataTable" style={{zIndex:1}}>
+        <Table striped bordered hover className="react-bootstrap-table text-center" id="dataTable" style={{zIndex:1}}>
         <thead>
             <tr>
             <th>ID</th>

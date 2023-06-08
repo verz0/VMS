@@ -7,7 +7,7 @@ import Manage from './components/Manage';
 import Event from './components/Event';
 import Home from './components/Home';
 import Login from './components/Login';
-import RegistrationForm from './components/Register';
+import Signup from './components/Register';
 import './App.css';
 
 function App() {
@@ -34,7 +34,7 @@ function App() {
          <Route path="/manage" element={<Manage/>} />
          <Route path = "/events" element = {<Event/>} />
          <Route path = "/login" element = {<Login/>} />
-         <Route path = "/register" element = {<RegistrationForm/>} />
+         <Route path = "/register" element = {<Signup/>} />
        </Routes>
     </BrowserRouter>
   );

@@ -1,0 +1,26 @@
+/* App.css */
+.active {
+  color: var(--color-grey-800);
+  background-color: var(--color-grey-50);
+  border-radius: var(--border-radius-sm);
+  z-index: 1;
+}
+
+.activeClicked {
+  color: var(--color-brand-600);
+  z-index: 1;
+}
+
+/* Example animation effect */
+.sidebar .nav-link {
+  transition: all 0.3s;
+  z-index: 1;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.activeClicked {
+  color: var(--color-brand-600);
+  background-color: var(--color-grey-50);
+  border-radius: var(--border-radius-sm);
+  z-index: 1;
+}
